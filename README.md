@@ -2,6 +2,10 @@
 
 A visual flow editor for creating and managing FFmpeg command pipelines. This tool provides a user-friendly interface for building complex FFmpeg commands through a node-based visual editor.
 
+## Live Demo
+
+Check out the live demo at: [https://livingbio.github.io/typed-ffmpeg-playground/](https://livingbio.github.io/typed-ffmpeg-playground/)
+
 ## Features
 
 - Visual node-based interface for building FFmpeg commands
