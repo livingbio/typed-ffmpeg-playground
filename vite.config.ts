@@ -17,7 +17,12 @@ export default defineConfig({
   },
   build: {
     assetsDir: 'assets',
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      mangle: false,
+      keep_classnames: true,
+      keep_fnames: true
+    },
     rollupOptions: {
       output: {
         assetFileNames: 'assets/[name]-[hash][extname]',
