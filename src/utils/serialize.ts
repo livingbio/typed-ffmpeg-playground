@@ -1,5 +1,5 @@
-// Class registry for serialization
-type Constructor<T> = new (...args: unknown[]) => T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T> = new (...args: any[]) => T;
 const classRegistry = new Map<string, Constructor<Serializable>>();
 
 // Base class for serializable objects
@@ -44,7 +44,7 @@ export function getRegisteredClassNames(): string[] {
 
 // Serialize an object to JSON string
 export function dumps(obj: unknown): string {
-  return JSON.stringify(obj, (key, value) => {
+  return JSON.stringify(obj, (_, value) => {
     if (value instanceof Map) {
       return {
         __type__: 'Map',

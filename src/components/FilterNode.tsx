@@ -11,7 +11,7 @@ interface ValidationError {
 
 function FilterNode({ data, id }: NodeProps<NodeData>) {
   const theme = useTheme();
-  const [parameters, setParameters] = useState<Record<string, string>>(data.parameters || {});
+  const [parameters, setParameters] = useState<Record<string, string | number | boolean>>(data.parameters || {});
   const [errors, setErrors] = useState<ValidationError>({});
   const [expanded, setExpanded] = useState<boolean>(false);
   const updateNodeInternals = useUpdateNodeInternals();

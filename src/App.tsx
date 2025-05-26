@@ -1,4 +1,3 @@
-import React from 'react';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import FFmpegFlowEditor from './components/FFmpegFlowEditor';
 

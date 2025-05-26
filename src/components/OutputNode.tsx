@@ -14,7 +14,7 @@ const outputOptions = options.filter(
 function OutputNode({ data, id }: NodeProps<NodeData>) {
   const theme = useTheme();
   const [filename, setFilename] = useState<string>(data.filename || '');
-  const [parameters, setParameters] = useState<Record<string, string>>(data.parameters || {});
+  const [parameters, setParameters] = useState<Record<string, string | number | boolean>>(data.parameters || {});
   const [expanded, setExpanded] = useState<boolean>(false);
 
   // Update local state when data changes
