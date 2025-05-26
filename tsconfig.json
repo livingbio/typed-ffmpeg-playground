@@ -20,7 +20,7 @@
       "@/*": ["src/*"]
     },
     "noEmit": true,
-    "types": ["node", "@testing-library/jest-dom"]
+    "types": ["node"]
   },
   "include": ["src"],
   "references": [
