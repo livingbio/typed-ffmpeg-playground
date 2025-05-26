@@ -3,6 +3,7 @@ import { Serializable, registerClasses, clearClassRegistry, dumps, loads } from 
 
 // Test class for serialization
 class TestClass extends Serializable {
+  static className = 'TestClass';
   constructor(
     public name: string,
     public value: number,
