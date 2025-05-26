@@ -4,6 +4,8 @@ const classRegistry = new Map<string, Constructor<Serializable>>();
 
 // Base class for serializable objects
 export class Serializable {
+  static className: string = 'Serializable';
+
   constructor(public id?: string) {}
 
   // toJSON will be called by JSON.stringify
@@ -18,7 +20,7 @@ export class Serializable {
         obj[key] = value instanceof Serializable ? value.toJSON() : value;
       }
     }
-    obj.__class__ = this.constructor.name;
+    obj.__class__ = (this.constructor as typeof Serializable).className;
     return obj;
   }
 }

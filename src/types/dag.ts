@@ -5,6 +5,7 @@ import { Serializable } from '../utils/serialize';
 export type StreamTypeEnum = 'av' | 'video' | 'audio';
 
 export class StreamType extends Serializable {
+  static className = 'StreamType';
   constructor(public value: StreamTypeEnum) {
     super();
   }
@@ -12,6 +13,7 @@ export class StreamType extends Serializable {
 
 // Base abstract classes
 export abstract class Node extends Serializable {
+  static className = 'Node';
   constructor(
     public kwargs: Record<string, string | number | boolean>,
     public inputs: (Stream | null)[],
@@ -22,6 +24,7 @@ export abstract class Node extends Serializable {
 }
 
 export abstract class Stream extends Serializable {
+  static className = 'Stream';
   constructor(
     public node: Node,
     public index: number | null,
@@ -33,6 +36,7 @@ export abstract class Stream extends Serializable {
 
 // Node types
 export class FilterNode extends Node {
+  static className = 'FilterNode';
   constructor(
     public name: string,
     inputs: (FilterableStream | null)[],
@@ -46,6 +50,7 @@ export class FilterNode extends Node {
 }
 
 export class InputNode extends Node {
+  static className = 'InputNode';
   constructor(
     public filename: string,
     inputs: [] = [],
@@ -57,6 +62,7 @@ export class InputNode extends Node {
 }
 
 export class OutputNode extends Node {
+  static className = 'OutputNode';
   constructor(
     public filename: string,
     inputs: (FilterableStream | null)[],
@@ -68,6 +74,7 @@ export class OutputNode extends Node {
 }
 
 export class GlobalNode extends Node {
+  static className = 'GlobalNode';
   constructor(
     inputs: (OutputStream | null)[],
     kwargs: Record<string, string | number | boolean> = {},
@@ -79,36 +86,42 @@ export class GlobalNode extends Node {
 
 // Stream types
 export class FilterableStream extends Stream {
+  static className = 'FilterableStream';
   constructor(node: FilterNode | InputNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
 }
 
 export class VideoStream extends FilterableStream {
+  static className = 'VideoStream';
   constructor(node: FilterNode | InputNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
 }
 
 export class AudioStream extends FilterableStream {
+  static className = 'AudioStream';
   constructor(node: FilterNode | InputNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
 }
 
 export class AVStream extends FilterableStream {
+  static className = 'AVStream';
   constructor(node: FilterNode | InputNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
 }
 
 export class OutputStream extends Stream {
+  static className = 'OutputStream';
   constructor(node: OutputNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
 }
 
 export class GlobalStream extends Stream {
+  static className = 'GlobalStream';
   constructor(node: GlobalNode, index: number | null = null, id?: string) {
     super(node, index, id);
   }
