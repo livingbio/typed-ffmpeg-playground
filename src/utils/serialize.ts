@@ -1,5 +1,5 @@
-// Class registry for serialization
-type Constructor<T> = new (...args: unknown[]) => T;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T> = new (...args: any[]) => T;
 const classRegistry = new Map<string, Constructor<Serializable>>();
 
 // Base class for serializable objects
