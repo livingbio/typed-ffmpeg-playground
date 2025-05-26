@@ -64,7 +64,7 @@ describe('Node Mapping', () => {
 
     // Deserialize
     const deserialized = loads(jsonString);
-    await nodeMappingManager._recursiveAddInternal(deserialized as Node | Stream);
+    await nodeMappingManager.recursiveAdd(deserialized as Stream);
     // check node mapping's snapshot
     expect(deserialized).toMatchSnapshot();
     expect(loads(nodeMappingManager.toJson())).toMatchSnapshot();
