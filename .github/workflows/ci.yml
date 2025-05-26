@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,9 +31,6 @@ jobs:
 
     - name: Run tests with coverage
       run: npm run test:coverage
-
-    - name: Build
-      run: npm run build
 
     # Upload coverage report to Codecov
     - name: Upload coverage to Codecov
