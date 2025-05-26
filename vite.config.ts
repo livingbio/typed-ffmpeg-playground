@@ -17,6 +17,7 @@ export default defineConfig({
   },
   build: {
     assetsDir: 'assets',
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         assetFileNames: 'assets/[name]-[hash][extname]',
