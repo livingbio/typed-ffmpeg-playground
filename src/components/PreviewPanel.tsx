@@ -139,6 +139,17 @@ export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) 
             </Button>
           </Box>
         </Box>
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            display: 'block', 
+            mb: 1, 
+            color: 'text.secondary',
+            fontStyle: 'italic'
+          }}
+        >
+          Note: Install the package first with pip install typed-ffmpeg
+        </Typography>
         <Paper
           elevation={0}
           sx={{
