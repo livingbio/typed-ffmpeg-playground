@@ -629,7 +629,7 @@ export class NodeMappingManager {
             }
           }
         } else {
-          throw new Error(`Option ${key} not found in filter ${node}`);
+          throw new Error(`Option ${key} not found in filter of type ${node.constructor.name}${node.name ? ` with name ${node.name}` : ''}`);
         }
       });
     }
