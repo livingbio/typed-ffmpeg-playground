@@ -38,7 +38,8 @@ export const NODE_MAPPING_EVENTS = {
   UPDATE: 'update',
 } as const;
 
-export type NodeMappingEventType = (typeof NODE_MAPPING_EVENTS)[keyof typeof NODE_MAPPING_EVENTS];
+export type NodeMappingEventType =
+  (typeof NODE_MAPPING_EVENTS)[keyof typeof NODE_MAPPING_EVENTS];
 
 /**
  * NodeMappingManager manages the mapping between the ReactFlow graph and the DAG model
@@ -100,7 +101,7 @@ export class NodeMappingManager {
     sourceId: string,
     targetId: string,
     sourceIndex: number,
-    targetIndex: number
+    targetIndex: number,
   ): string {
     return `edge-${sourceId}-${sourceIndex}-${targetId}-${targetIndex}`;
   }
@@ -124,7 +125,10 @@ export class NodeMappingManager {
   }
 
   // Helper function to ensure node inputs are initialized
-  private ensureNodeInputs(node: FilterNode | OutputNode | GlobalNode, count: number): void {
+  private ensureNodeInputs(
+    node: FilterNode | OutputNode | GlobalNode,
+    count: number,
+  ): void {
     if (!node.inputs) {
       node.inputs = [];
     }
@@ -136,8 +140,11 @@ export class NodeMappingManager {
   }
   private async evaluateIOtypings(
     filter: FFMpegFilter,
-    kwargs: Record<string, string | number | boolean>
-  ): Promise<{ input_typings: StreamTypeEnum[]; output_typings: StreamTypeEnum[] }> {
+    kwargs: Record<string, string | number | boolean>,
+  ): Promise<{
+    input_typings: StreamTypeEnum[];
+    output_typings: StreamTypeEnum[];
+  }> {
     // merge parameters with kwargs
     // extract default value from filter.options and convert to a Dict
     let parameters: Record<string, string | number | boolean> = {};
@@ -157,13 +164,19 @@ export class NodeMappingManager {
     if (!filter.formula_typings_input) {
       input_typings = filter.stream_typings_input.map((t) => t.type.value);
     } else {
-      input_typings = await evaluateFormula(filter.formula_typings_input, parameters);
+      input_typings = await evaluateFormula(
+        filter.formula_typings_input,
+        parameters,
+      );
     }
     let output_typings: StreamTypeEnum[] = [];
     if (!filter.formula_typings_output) {
       output_typings = filter.stream_typings_output.map((t) => t.type.value);
     } else {
-      output_typings = await evaluateFormula(filter.formula_typings_output, parameters);
+      output_typings = await evaluateFormula(
+        filter.formula_typings_output,
+        parameters,
+      );
     }
     return {
       input_typings,
@@ -172,7 +185,7 @@ export class NodeMappingManager {
   }
   private _addGlobalNode(
     inputs: (OutputStream | null)[],
-    kwargs: Record<string, string | number | boolean>
+    kwargs: Record<string, string | number | boolean>,
   ): string {
     this.globalNode.inputs = inputs;
     this.globalNode.kwargs = kwargs;
@@ -191,7 +204,7 @@ export class NodeMappingManager {
   private _addOutputNode(
     filename: string,
     inputs: (FilterableStream | null)[],
-    kwargs: Record<string, string | number | boolean>
+    kwargs: Record<string, string | number | boolean>,
   ): string {
     const id = this.generateNodeId();
     const node = new OutputNode(filename, inputs, kwargs, id);
@@ -210,7 +223,7 @@ export class NodeMappingManager {
 
   private _addInputNode(
     filename: string,
-    kwargs: Record<string, string | number | boolean>
+    kwargs: Record<string, string | number | boolean>,
   ): string {
     const id = this.generateNodeId();
     const node = new InputNode(filename, [], kwargs, id);
@@ -233,10 +246,17 @@ export class NodeMappingManager {
     filter: FFMpegFilter,
     input_typings: StreamType[],
     output_typings: StreamType[],
-    kwargs: Record<string, string | number | boolean>
+    kwargs: Record<string, string | number | boolean>,
   ): string {
     const id = this.generateNodeId();
-    const node = new FilterNode(name, inputs, input_typings, output_typings, kwargs, id);
+    const node = new FilterNode(
+      name,
+      inputs,
+      input_typings,
+      output_typings,
+      kwargs,
+      id,
+    );
     this.nodeMapping.nodeMap.set(id, node);
     this.nodeMapping.nodeData.set(id, {
       label: name,
@@ -245,8 +265,14 @@ export class NodeMappingManager {
       filter,
       parameters: kwargs,
       handles: {
-        inputs: input_typings.map((t, index) => ({ id: `input-${index}`, type: t.value })),
-        outputs: output_typings.map((t, index) => ({ id: `output-${index}`, type: t.value })),
+        inputs: input_typings.map((t, index) => ({
+          id: `input-${index}`,
+          type: t.value,
+        })),
+        outputs: output_typings.map((t, index) => ({
+          id: `output-${index}`,
+          type: t.value,
+        })),
       },
     });
     return id;
@@ -265,7 +291,10 @@ export class NodeMappingManager {
     let nodeId: string;
     switch (params.type) {
       case 'global':
-        nodeId = this._addGlobalNode(params.inputs as (OutputStream | null)[], params.kwargs || {});
+        nodeId = this._addGlobalNode(
+          params.inputs as (OutputStream | null)[],
+          params.kwargs || {},
+        );
         break;
       case 'output':
         if (!params.filename) {
@@ -274,7 +303,7 @@ export class NodeMappingManager {
         nodeId = this._addOutputNode(
           params.filename,
           params.inputs as (FilterableStream | null)[],
-          params.kwargs || {}
+          params.kwargs || {},
         );
         break;
       case 'input':
@@ -296,7 +325,7 @@ export class NodeMappingManager {
         }
         const { input_typings, output_typings } = await this.evaluateIOtypings(
           params.filter,
-          params.kwargs || {}
+          params.kwargs || {},
         );
         nodeId = this._addFilterNode(
           params.name,
@@ -304,7 +333,7 @@ export class NodeMappingManager {
           params.filter,
           input_typings.map((t) => new StreamType(t)),
           output_typings.map((t) => new StreamType(t)),
-          params.kwargs || {}
+          params.kwargs || {},
         );
         break;
       }
@@ -339,7 +368,10 @@ export class NodeMappingManager {
       const sourceNode = stream.node;
       const sourceNodeId = sourceNode.id;
 
-      if ((targetInfo && targetInfo.nodeId === nodeId) || sourceNodeId === nodeId) {
+      if (
+        (targetInfo && targetInfo.nodeId === nodeId) ||
+        sourceNodeId === nodeId
+      ) {
         edgesToRemove.push(edgeId);
       }
     }
@@ -396,7 +428,7 @@ export class NodeMappingManager {
     sourceNodeId: string,
     targetNodeId: string,
     sourceIndex: number,
-    targetIndex: number
+    targetIndex: number,
   ): string {
     const sourceNode = this.nodeMapping.nodeMap.get(sourceNodeId);
     const targetNode = this.nodeMapping.nodeMap.get(targetNodeId);
@@ -412,7 +444,7 @@ export class NodeMappingManager {
       // Check if the sourceIndex is valid
       if (sourceIndex >= sourceNode.output_typings.length) {
         throw new Error(
-          `Source node ${sourceNodeId} does not have an output at index ${sourceIndex}`
+          `Source node ${sourceNodeId} does not have an output at index ${sourceIndex}`,
         );
       }
 
@@ -445,7 +477,9 @@ export class NodeMappingManager {
     ) {
       this.ensureNodeInputs(targetNode, targetIndex + 1);
     } else {
-      throw new Error(`Cannot add input to node of type ${targetNode.constructor.name}`);
+      throw new Error(
+        `Cannot add input to node of type ${targetNode.constructor.name}`,
+      );
     }
 
     // Check stream type compatibility for FilterNode targets
@@ -453,7 +487,7 @@ export class NodeMappingManager {
       // Check if the targetIndex is valid
       if (targetIndex >= targetNode.input_typings.length) {
         throw new Error(
-          `Target node ${targetNodeId} does not have an input at index ${targetIndex}`
+          `Target node ${targetNodeId} does not have an input at index ${targetIndex}`,
         );
       }
 
@@ -471,17 +505,21 @@ export class NodeMappingManager {
       }
 
       if (expectedType && actualType != 'av' && expectedType !== actualType) {
-        throw new Error(`Stream type mismatch: expected ${expectedType}, got ${actualType}`);
+        throw new Error(
+          `Stream type mismatch: expected ${expectedType}, got ${actualType}`,
+        );
       }
       if (!(stream instanceof FilterableStream)) {
-        throw new Error(`Stream type mismatch: expected FilterableStream, got ${stream}`);
+        throw new Error(
+          `Stream type mismatch: expected FilterableStream, got ${stream}`,
+        );
       }
       targetNode.inputs[targetIndex] = stream;
     }
     if (targetNode instanceof OutputNode) {
       if (!(stream instanceof FilterableStream)) {
         throw new Error(
-          `Stream type mismatch: expected FilterableStream, got ${stream.constructor.name}`
+          `Stream type mismatch: expected FilterableStream, got ${stream.constructor.name}`,
         );
       }
       targetNode.inputs[targetIndex] = stream;
@@ -489,7 +527,7 @@ export class NodeMappingManager {
     if (targetNode instanceof GlobalNode) {
       if (!(stream instanceof OutputStream)) {
         throw new Error(
-          `Stream type mismatch: expected OutputStream, got ${stream.constructor.name}`
+          `Stream type mismatch: expected OutputStream, got ${stream.constructor.name}`,
         );
       }
       targetNode.inputs[targetIndex] = stream;
@@ -499,9 +537,17 @@ export class NodeMappingManager {
     }
 
     // Create edge ID and add to mapping
-    const edgeId = this.generateEdgeId(sourceNodeId, targetNodeId, sourceIndex, targetIndex);
+    const edgeId = this.generateEdgeId(
+      sourceNodeId,
+      targetNodeId,
+      sourceIndex,
+      targetIndex,
+    );
     this.edgeMapping.edgeMap.set(edgeId, stream);
-    this.edgeMapping.targetMap.set(stream, { nodeId: targetNodeId, index: targetIndex });
+    this.edgeMapping.targetMap.set(stream, {
+      nodeId: targetNodeId,
+      index: targetIndex,
+    });
     return edgeId;
   }
 
@@ -509,9 +555,14 @@ export class NodeMappingManager {
     sourceNodeId: string,
     targetNodeId: string,
     sourceIndex: number,
-    targetIndex: number
+    targetIndex: number,
   ): string {
-    const edgeId = this._addEdge(sourceNodeId, targetNodeId, sourceIndex, targetIndex);
+    const edgeId = this._addEdge(
+      sourceNodeId,
+      targetNodeId,
+      sourceIndex,
+      targetIndex,
+    );
     this.emitUpdate();
     return edgeId;
   }
@@ -544,9 +595,8 @@ export class NodeMappingManager {
     updates: {
       kwargs?: Record<string, string | number | boolean>;
       filename?: string;
-    }
+    },
   ): Promise<void> {
-
     const kwargs = updates.kwargs || {};
     // remove kwargs with empty string value
     Object.keys(kwargs).forEach((key) => {
@@ -555,19 +605,32 @@ export class NodeMappingManager {
       }
     });
 
-    
+    // Convert string values to boolean for OPT_TYPE_BOOL options
     const node = this.nodeMapping.nodeMap.get(nodeId);
     if (!node) {
       throw new Error(`Node ${nodeId} not found in mapping`);
     }
-    
-    node.kwargs = kwargs;
+
     if (node instanceof FilterNode) {
       const filter = predefinedFilters.find((f) => f.name === node.name);
       if (!filter) {
         throw new Error(`Filter ${node.name} not found`);
       }
-      const { input_typings, output_typings } = await this.evaluateIOtypings(filter, node.kwargs);
+
+      // Convert string values to boolean for OPT_TYPE_BOOL options
+      Object.keys(kwargs).forEach((key) => {
+        const option = filter.options.find((opt) => opt.name === key);
+        if (option && option.type.value === 'OPT_TYPE_BOOL') {
+          if (typeof kwargs[key] === 'string') {
+            kwargs[key] = kwargs[key].toLowerCase() === 'true';
+          }
+        }
+      });
+
+      const { input_typings, output_typings } = await this.evaluateIOtypings(
+        filter,
+        kwargs,
+      );
       node.input_typings = input_typings.map((t) => new StreamType(t));
       node.output_typings = output_typings.map((t) => new StreamType(t));
       this.ensureNodeInputs(node, node.input_typings.length);
@@ -588,11 +651,14 @@ export class NodeMappingManager {
       }
     }
 
+    node.kwargs = kwargs;
     if (updates.filename) {
       if (node instanceof InputNode || node instanceof OutputNode) {
         node.filename = updates.filename;
       } else {
-        throw new Error(`Cannot update filename on node type ${node.constructor.name}`);
+        throw new Error(
+          `Cannot update filename on node type ${node.constructor.name}`,
+        );
       }
     }
     this.emitUpdate();
@@ -639,7 +705,10 @@ export class NodeMappingManager {
             this.globalNode.inputs = item.inputs;
           }
           if (item.kwargs) {
-            this.globalNode.kwargs = { ...this.globalNode.kwargs, ...item.kwargs };
+            this.globalNode.kwargs = {
+              ...this.globalNode.kwargs,
+              ...item.kwargs,
+            };
           }
           nodeId = this.globalNodeId;
         } else {
