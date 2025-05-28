@@ -19,6 +19,7 @@ import { dumps, loads, registerClasses } from './serialize';
 import { EventEmitter } from 'events';
 import { evaluateFormula } from './formulaEvaluator';
 import { NodeData } from '@/types/node';
+import options from '../config/options.json';
 
 export interface NodeMapping {
   // Maps ReactFlow node ID to DAG node
@@ -597,7 +598,7 @@ export class NodeMappingManager {
       filename?: string;
     },
   ): Promise<void> {
-    const kwargs = updates.kwargs || {};
+    const kwargs = updates.kwargs ? { ...updates.kwargs } : {};
     // remove kwargs with empty string value
     Object.keys(kwargs).forEach((key) => {
       if (kwargs[key] === '') {
@@ -611,21 +612,33 @@ export class NodeMappingManager {
       throw new Error(`Node ${nodeId} not found in mapping`);
     }
 
+    console.log(`kwargs: ${JSON.stringify(kwargs)}`);
+    if (
+      node instanceof InputNode ||
+      node instanceof OutputNode ||
+      node instanceof GlobalNode
+    ) {
+      // Convert string values to boolean for OPT_TYPE_BOOL options
+      Object.keys(kwargs).forEach((key) => {
+        const option = options.find((opt) => opt.name === key);
+        if (option) {
+          console.log(`option: ${option.name} ${option.type}`);
+          if (option.type === 'OPT_TYPE_BOOL') {
+            if (typeof kwargs[key] === 'string') {
+              kwargs[key] = true;
+            }
+          }
+        } else {
+          throw new Error(`Option ${key} not found in filter ${node}`);
+        }
+      });
+    }
+
     if (node instanceof FilterNode) {
       const filter = predefinedFilters.find((f) => f.name === node.name);
       if (!filter) {
         throw new Error(`Filter ${node.name} not found`);
       }
-
-      // Convert string values to boolean for OPT_TYPE_BOOL options
-      Object.keys(kwargs).forEach((key) => {
-        const option = filter.options.find((opt) => opt.name === key);
-        if (option && option.type.value === 'OPT_TYPE_BOOL') {
-          if (typeof kwargs[key] === 'string') {
-            kwargs[key] = kwargs[key].toLowerCase() === 'true';
-          }
-        }
-      });
 
       const { input_typings, output_typings } = await this.evaluateIOtypings(
         filter,
