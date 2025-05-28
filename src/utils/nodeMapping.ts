@@ -19,7 +19,6 @@ import { dumps, loads, registerClasses } from './serialize';
 import { EventEmitter } from 'events';
 import { evaluateFormula } from './formulaEvaluator';
 import { NodeData } from '@/types/node';
-import { KayakingTwoTone } from '@mui/icons-material';
 
 export interface NodeMapping {
   // Maps ReactFlow node ID to DAG node
@@ -548,7 +547,7 @@ export class NodeMappingManager {
     }
   ): Promise<void> {
 
-    let kwargs = updates.kwargs || {};
+    const kwargs = updates.kwargs || {};
     // remove kwargs with empty string value
     Object.keys(kwargs).forEach((key) => {
       if (kwargs[key] === '') {
