@@ -19,6 +19,7 @@ import { dumps, loads, registerClasses } from './serialize';
 import { EventEmitter } from 'events';
 import { evaluateFormula } from './formulaEvaluator';
 import { NodeData } from '@/types/node';
+import { KayakingTwoTone } from '@mui/icons-material';
 
 export interface NodeMapping {
   // Maps ReactFlow node ID to DAG node
@@ -546,21 +547,30 @@ export class NodeMappingManager {
       filename?: string;
     }
   ): Promise<void> {
+
+    let kwargs = updates.kwargs || {};
+    // remove kwargs with empty string value
+    Object.keys(kwargs).forEach((key) => {
+      if (kwargs[key] === '') {
+        delete kwargs[key];
+      }
+    });
+
+    
     const node = this.nodeMapping.nodeMap.get(nodeId);
     if (!node) {
       throw new Error(`Node ${nodeId} not found in mapping`);
     }
-
+    
+    node.kwargs = kwargs;
     if (node instanceof FilterNode) {
       const filter = predefinedFilters.find((f) => f.name === node.name);
       if (!filter) {
         throw new Error(`Filter ${node.name} not found`);
       }
-      const merge_kwargs = { ...node.kwargs, ...updates.kwargs };
-      const { input_typings, output_typings } = await this.evaluateIOtypings(filter, merge_kwargs);
+      const { input_typings, output_typings } = await this.evaluateIOtypings(filter, node.kwargs);
       node.input_typings = input_typings.map((t) => new StreamType(t));
       node.output_typings = output_typings.map((t) => new StreamType(t));
-      node.kwargs = merge_kwargs;
       this.ensureNodeInputs(node, node.input_typings.length);
 
       // Update node data handles
@@ -577,10 +587,6 @@ export class NodeMappingManager {
           })),
         };
       }
-    }
-
-    if (updates.kwargs) {
-      node.kwargs = { ...node.kwargs, ...updates.kwargs };
     }
 
     if (updates.filename) {
