@@ -1,8 +1,17 @@
-import { Paper, Typography, Box, Button, CircularProgress } from '@mui/material';
+import {
+  Paper,
+  Typography,
+  Box,
+  Button,
+  CircularProgress,
+} from '@mui/material';
 import { NodeMappingManager, NODE_MAPPING_EVENTS } from '../utils/nodeMapping';
 import { useEffect, useState, useRef } from 'react';
 import { runPython } from '../utils/pyodideUtils';
-import { generateFFmpegPythonCode, generateFFmpegCommand } from '../utils/generateFFmpegCommand';
+import {
+  generateFFmpegPythonCode,
+  generateFFmpegCommand,
+} from '../utils/generateFFmpegCommand';
 
 interface PreviewPanelProps {
   nodeMappingManager: NodeMappingManager;
@@ -11,7 +20,9 @@ interface PreviewPanelProps {
 // Debounce time in ms - adjust as needed
 const DEBOUNCE_TIME = 800;
 
-export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) {
+export default function PreviewPanel({
+  nodeMappingManager,
+}: PreviewPanelProps) {
   const [pythonCode, setPythonCode] = useState<string>('');
   const [ffmpegCmd, setFfmpegCmd] = useState<string>('');
   const [result, setResult] = useState<string>('');
@@ -27,12 +38,19 @@ export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) 
     const updatePythonCode = async () => {
       try {
         setIsLoading(true);
+        setError(undefined);
 
-        const codeResult = await generateFFmpegPythonCode(nodeMappingManager.toJson());
-        const commandResult = await generateFFmpegCommand(nodeMappingManager.toJson());
+        const codeResult = await generateFFmpegPythonCode(
+          nodeMappingManager.toJson(),
+        );
+        const commandResult = await generateFFmpegCommand(
+          nodeMappingManager.toJson(),
+        );
 
         if (codeResult.error || commandResult.error) {
           setError(codeResult.error || commandResult.error || '');
+          setPythonCode('');
+          setFfmpegCmd('');
         } else {
           setPythonCode(codeResult.result);
           setFfmpegCmd(commandResult.result || '');
@@ -40,6 +58,8 @@ export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) 
       } catch (e) {
         console.error('Error updating Python code:', e);
         setError(e instanceof Error ? e.message : String(e));
+        setPythonCode('');
+        setFfmpegCmd('');
       } finally {
         setIsLoading(false);
       }
@@ -61,7 +81,10 @@ export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) 
 
     // Subscribe to node mapping update events
     // Now we only need to listen for a single UPDATE event
-    const unsubscribe = nodeMappingManager.on(NODE_MAPPING_EVENTS.UPDATE, debouncedUpdate);
+    const unsubscribe = nodeMappingManager.on(
+      NODE_MAPPING_EVENTS.UPDATE,
+      debouncedUpdate,
+    );
 
     // Initial update
     debouncedUpdate();
@@ -139,13 +162,13 @@ export default function PreviewPanel({ nodeMappingManager }: PreviewPanelProps) 
             </Button>
           </Box>
         </Box>
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            display: 'block', 
-            mb: 1, 
+        <Typography
+          variant="caption"
+          sx={{
+            display: 'block',
+            mb: 1,
             color: 'text.secondary',
-            fontStyle: 'italic'
+            fontStyle: 'italic',
           }}
         >
           Note: Install the package first with pip install typed-ffmpeg

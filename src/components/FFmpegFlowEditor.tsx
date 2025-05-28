@@ -64,7 +64,7 @@ const createNode = async (
   parameters: Record<string, string> | undefined,
   position: { x: number; y: number } | undefined,
   nodeMappingManager: NodeMappingManager,
-  filter?: (typeof predefinedFilters)[0]
+  filter?: (typeof predefinedFilters)[0],
 ): Promise<Node<NodeData>> => {
   const defaultPosition = {
     x: Math.random() * 500 + 200,
@@ -119,7 +119,7 @@ const createEdge = (
   target: string,
   sourceHandle: string | null,
   targetHandle: string | null,
-  nodeMappingManager: NodeMappingManager
+  nodeMappingManager: NodeMappingManager,
 ): Edge<EdgeData> => {
   if (!sourceHandle || !targetHandle) {
     throw new Error('Source or target handle not found');
@@ -128,7 +128,12 @@ const createEdge = (
   const sourceIndex = parseInt(sourceHandle.split('-')[1] || '0');
   const targetIndex = parseInt(targetHandle.split('-')[1] || '0');
 
-  const edgeId = nodeMappingManager.addEdge(source, target, sourceIndex, targetIndex);
+  const edgeId = nodeMappingManager.addEdge(
+    source,
+    target,
+    sourceIndex,
+    targetIndex,
+  );
 
   // Get the stream from the edge mapping
   const stream = nodeMappingManager.getEdgeMapping().edgeMap.get(edgeId);
@@ -153,7 +158,11 @@ const createEdge = (
 };
 
 // Helper function for auto layout
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => {
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  direction = 'LR',
+) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
@@ -164,10 +173,10 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
   // Configure the graph with LR direction and increased spacing
   dagreGraph.setGraph({
     rankdir: direction,
-    nodesep: 200, // Increased from 100
-    ranksep: 200, // Increased from 100
-    marginx: 100, // Increased from 50
-    marginy: 100, // Increased from 50
+    nodesep: 400, // Increased from 200
+    ranksep: 400, // Increased from 200
+    marginx: 200, // Increased from 100
+    marginy: 200, // Increased from 100
   });
 
   // Add nodes to the graph
@@ -202,7 +211,8 @@ function FFmpegFlowEditorInner() {
   const [nodeMappingManager] = useState(() => new NodeMappingManager());
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
@@ -248,7 +258,10 @@ function FFmpegFlowEditorInner() {
           return {
             id,
             type: type,
-            position: { x: Math.random() * 500 + 200, y: Math.random() * 300 + 100 },
+            position: {
+              x: Math.random() * 500 + 200,
+              y: Math.random() * 300 + 100,
+            },
             data,
           };
         });
@@ -262,7 +275,9 @@ function FFmpegFlowEditorInner() {
             throw new Error(`Source node ID not found for edge ${id}`);
           }
 
-          const targetInfo = nodeMappingManager.getEdgeMapping().targetMap.get(stream);
+          const targetInfo = nodeMappingManager
+            .getEdgeMapping()
+            .targetMap.get(stream);
           if (!targetInfo) {
             throw new Error(`Target info not found for edge ${id}`);
           }
@@ -286,7 +301,11 @@ function FFmpegFlowEditorInner() {
             sourceHandle,
             targetHandle,
             style: { stroke: EDGE_COLORS[edgeType] },
-            data: { type: edgeType, sourceIndex: stream.index, targetIndex: targetInfo.index },
+            data: {
+              type: edgeType,
+              sourceIndex: stream.index,
+              targetIndex: targetInfo.index,
+            },
             type: 'smoothstep',
             animated: false,
           };
@@ -301,7 +320,7 @@ function FFmpegFlowEditorInner() {
         // Fit view to show all nodes
         if (reactFlowInstance) {
           console.log('Fitting view...');
-          reactFlowInstance.fitView();
+          reactFlowInstance.fitView({ padding: 0.5 });
         }
         console.log('loadJson completed successfully');
       } catch (error) {
@@ -309,18 +328,22 @@ function FFmpegFlowEditorInner() {
         throw error; // Re-throw to be caught by handlePasteCommand
       }
     },
-    [nodeMappingManager, setNodes, setEdges, reactFlowInstance]
+    [nodeMappingManager, setNodes, setEdges, reactFlowInstance],
   );
 
   // Add onLayout callback
   const onLayout = useCallback(() => {
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, 'LR');
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges,
+      'LR',
+    );
     setNodes([...layoutedNodes]);
     setEdges([...layoutedEdges]);
 
     // Fit view after layout
     if (reactFlowInstance) {
-      reactFlowInstance.fitView();
+      reactFlowInstance.fitView({ padding: 0.8 });
     }
   }, [nodes, edges, setNodes, setEdges, reactFlowInstance]);
 
@@ -331,23 +354,33 @@ function FFmpegFlowEditorInner() {
       const initialNodes = [
         await createNode('input', {}, { x: 100, y: 300 }, nodeMappingManager),
         await createNode('output', {}, { x: 1600, y: 300 }, nodeMappingManager),
-        await createNode('global', {}, { x: 2000, y: 300 }, nodeMappingManager),
+        await createNode('global', {}, { x: 2400, y: 300 }, nodeMappingManager),
       ];
 
       setNodes(initialNodes);
 
-      // Create initial edge between output and global nodes
+      // Create initial edges
+      const inputNode = initialNodes[0]; // input node
       const outputNode = initialNodes[1]; // output node
       const globalNode = initialNodes[2]; // global node
-      const initialEdge = createEdge(
+
+      const inputToOutputEdge = createEdge(
+        inputNode.id,
+        outputNode.id,
+        'output-0',
+        'input-0',
+        nodeMappingManager,
+      );
+
+      const outputToGlobalEdge = createEdge(
         outputNode.id,
         globalNode.id,
         'output-0',
         'input-0',
-        nodeMappingManager
+        nodeMappingManager,
       );
 
-      setEdges([initialEdge]);
+      setEdges([inputToOutputEdge, outputToGlobalEdge]);
     };
 
     initializeNodes();
@@ -381,7 +414,7 @@ function FFmpegFlowEditorInner() {
               };
             }
             return node;
-          })
+          }),
         );
       } else {
         throw new Error(`Node ${id} not found`);
@@ -403,8 +436,12 @@ function FFmpegFlowEditorInner() {
       const sourceNode = nodes.find((node) => node.id === connection.source) as
         | Node<NodeData>
         | undefined;
-      const sourceIndex = parseInt(connection.sourceHandle?.split('-')[1] || '0');
-      const targetIndex = parseInt(connection.targetHandle?.split('-')[1] || '0');
+      const sourceIndex = parseInt(
+        connection.sourceHandle?.split('-')[1] || '0',
+      );
+      const targetIndex = parseInt(
+        connection.targetHandle?.split('-')[1] || '0',
+      );
 
       switch (sourceNode?.data.nodeType) {
         case 'global':
@@ -434,7 +471,7 @@ function FFmpegFlowEditorInner() {
 
       return false;
     },
-    [nodes]
+    [nodes],
   );
 
   const onConnect = useCallback(
@@ -445,25 +482,30 @@ function FFmpegFlowEditorInner() {
           params.target,
           params.sourceHandle,
           params.targetHandle,
-          nodeMappingManager
+          nodeMappingManager,
         );
 
         setEdges((eds) => addEdge(newEdge, eds));
       }
     },
-    [isValidConnection, setEdges, nodeMappingManager]
+    [isValidConnection, setEdges, nodeMappingManager],
   );
 
   const onAddNode = useCallback(
     async (
       filterType: string,
       parameters?: Record<string, string>,
-      position?: { x: number; y: number }
+      position?: { x: number; y: number },
     ) => {
-      const newNode = await createNode(filterType, parameters, position, nodeMappingManager);
+      const newNode = await createNode(
+        filterType,
+        parameters,
+        position,
+        nodeMappingManager,
+      );
       setNodes((nds) => [...nds, newNode]);
     },
-    [setNodes, nodeMappingManager]
+    [setNodes, nodeMappingManager],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -490,7 +532,7 @@ function FFmpegFlowEditorInner() {
         onAddNode(type, undefined, position);
       }
     },
-    [reactFlowInstance, onAddNode]
+    [reactFlowInstance, onAddNode],
   );
 
   const onNodesDelete = useCallback(
@@ -500,7 +542,7 @@ function FFmpegFlowEditorInner() {
         nodeMappingManager.removeNode(node.id);
       });
     },
-    [nodeMappingManager]
+    [nodeMappingManager],
   );
 
   const onEdgesDelete = useCallback(
@@ -510,7 +552,7 @@ function FFmpegFlowEditorInner() {
         nodeMappingManager.removeEdge(edge.id);
       });
     },
-    [nodeMappingManager]
+    [nodeMappingManager],
   );
 
   const handlePasteCommand = useCallback(
@@ -540,11 +582,11 @@ function FFmpegFlowEditorInner() {
         console.error('Error in handlePasteCommand:', error);
         alert(
           'Error parsing FFmpeg command: ' +
-            (error instanceof Error ? error.message : String(error))
+            (error instanceof Error ? error.message : String(error)),
         );
       }
     },
-    [loadJson]
+    [loadJson],
   );
 
   // Add handleExport function
@@ -573,11 +615,12 @@ function FFmpegFlowEditorInner() {
       } catch (error) {
         console.error('Error loading JSON:', error);
         alert(
-          'Error loading JSON file: ' + (error instanceof Error ? error.message : String(error))
+          'Error loading JSON file: ' +
+            (error instanceof Error ? error.message : String(error)),
         );
       }
     },
-    [loadJson]
+    [loadJson],
   );
 
   return (
@@ -604,7 +647,7 @@ function FFmpegFlowEditorInner() {
         onInit={setReactFlowInstance}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
         fitView={false}
         minZoom={0.1}
         maxZoom={2}
@@ -638,12 +681,21 @@ function FFmpegFlowEditorInner() {
         >
           <Box sx={{ p: 2 }}>
             <Box
-              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2,
+              }}
             >
               <Typography variant="h6" sx={{ fontSize: '0.875rem' }}>
                 Preview
               </Typography>
-              <IconButton size="small" onClick={() => setIsPreviewVisible(false)} sx={{ p: 0.5 }}>
+              <IconButton
+                size="small"
+                onClick={() => setIsPreviewVisible(false)}
+                sx={{ p: 0.5 }}
+              >
                 <VisibilityOffIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -701,7 +753,11 @@ function FFmpegFlowEditorInner() {
               FFmpeg Flow Editor
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <IconButton size="small" onClick={() => setIsSidebarVisible(false)} sx={{ p: 0.5 }}>
+              <IconButton
+                size="small"
+                onClick={() => setIsSidebarVisible(false)}
+                sx={{ p: 0.5 }}
+              >
                 <VisibilityOffIcon fontSize="small" />
               </IconButton>
               <Button
@@ -739,7 +795,12 @@ function FFmpegFlowEditorInner() {
                 }}
               >
                 <UploadIcon fontSize="small" />
-                <input type="file" hidden accept=".json" onChange={handleLoadJson} />
+                <input
+                  type="file"
+                  hidden
+                  accept=".json"
+                  onChange={handleLoadJson}
+                />
               </Button>
             </Box>
           </Box>
