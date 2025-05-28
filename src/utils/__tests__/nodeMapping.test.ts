@@ -14,7 +14,11 @@ import {
   Stream,
 } from '../../types/dag';
 import { NodeMappingManager } from '../nodeMapping';
-import { loads, clearClassRegistry, registerClasses } from '../../utils/serialize';
+import {
+  loads,
+  clearClassRegistry,
+  registerClasses,
+} from '../../utils/serialize';
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { setupPyodideMock } from './testUtils';
@@ -57,6 +61,38 @@ describe('Node Mapping', () => {
   beforeEach(() => {
     nodeMappingManager = new NodeMappingManager();
     setupPyodideMock();
+  });
+
+  it('should filter out empty string values when updating node kwargs', async () => {
+    // Add a node with initial kwargs
+    const nodeId = await nodeMappingManager.addNode({
+      type: 'filter',
+      name: 'scale',
+      inputs: [],
+      kwargs: { width: 640, height: 480 },
+    });
+
+    // Update the node with some empty string values
+    await nodeMappingManager.updateNode(nodeId, {
+      kwargs: {
+        width: 800,
+        height: '',
+        force_original_aspect_ratio: true,
+        d: '',
+      },
+    });
+
+    // Get the updated node
+    const node = nodeMappingManager.getNodeMapping().nodeMap.get(nodeId);
+    expect(node).toBeDefined();
+    expect(node).toBeInstanceOf(FilterNode);
+
+    // Verify that empty string values are filtered out
+    const filterNode = node as FilterNode;
+    expect(filterNode.kwargs).toEqual({
+      width: 800,
+      force_original_aspect_ratio: true,
+    });
   });
 
   it.each(testFiles)('should handle $name case', async ({ data }) => {
@@ -135,9 +171,15 @@ describe('recursiveAddToMapping', () => {
     const edge2 = nodeMapping.addEdge(target1Id, target2Id, 0, 0);
 
     // Verify nodes are in mapping
-    expect(nodeMapping.getNodeMapping().nodeMap.get(sourceId)).toBeInstanceOf(InputNode);
-    expect(nodeMapping.getNodeMapping().nodeMap.get(target1Id)).toBeInstanceOf(FilterNode);
-    expect(nodeMapping.getNodeMapping().nodeMap.get(target2Id)).toBeInstanceOf(OutputNode);
+    expect(nodeMapping.getNodeMapping().nodeMap.get(sourceId)).toBeInstanceOf(
+      InputNode,
+    );
+    expect(nodeMapping.getNodeMapping().nodeMap.get(target1Id)).toBeInstanceOf(
+      FilterNode,
+    );
+    expect(nodeMapping.getNodeMapping().nodeMap.get(target2Id)).toBeInstanceOf(
+      OutputNode,
+    );
 
     // Verify edges are in mapping
     expect(nodeMapping.getEdgeMapping().edgeMap.get(edge1)).toBeDefined();
@@ -170,9 +212,15 @@ describe('recursiveAddToMapping', () => {
     const edge2 = nodeMapping.addEdge(filterId, outputId, 0, 0);
 
     // Verify nodes are in mapping
-    expect(nodeMapping.getNodeMapping().nodeMap.get(inputId)).toBeInstanceOf(InputNode);
-    expect(nodeMapping.getNodeMapping().nodeMap.get(filterId)).toBeInstanceOf(FilterNode);
-    expect(nodeMapping.getNodeMapping().nodeMap.get(outputId)).toBeInstanceOf(OutputNode);
+    expect(nodeMapping.getNodeMapping().nodeMap.get(inputId)).toBeInstanceOf(
+      InputNode,
+    );
+    expect(nodeMapping.getNodeMapping().nodeMap.get(filterId)).toBeInstanceOf(
+      FilterNode,
+    );
+    expect(nodeMapping.getNodeMapping().nodeMap.get(outputId)).toBeInstanceOf(
+      OutputNode,
+    );
 
     // Verify edges are in mapping
     expect(nodeMapping.getEdgeMapping().edgeMap.get(edge1)).toBeDefined();
