@@ -45,7 +45,7 @@ jobs:
 
     # Upload coverage reports as artifacts
     - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: frontend-coverage-report
         path: coverage 
