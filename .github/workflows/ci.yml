@@ -34,7 +34,7 @@ jobs:
     # Upload coverage report to Codecov (skip for Dependabot PRs)
     - name: Upload coverage to Codecov
       if: github.actor != 'dependabot[bot]'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         directory: ./coverage
         flags: frontend,typescript,react
