@@ -1,5 +1,8 @@
 # FFmpeg Flow Editor
 
+> [!IMPORTANT]
+> **This repository is archived.** The playground has been merged into [lucemia/typed-ffmpeg](https://github.com/lucemia/typed-ffmpeg) — see that repo for active development, issues, and the maintained live demo.
+
 A visual flow editor for creating and managing FFmpeg command pipelines. This tool provides a user-friendly interface for building complex FFmpeg commands through a node-based visual editor.
 
 ## Live Demo
